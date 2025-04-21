@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local coreGui = game:GetService("CoreGui")
 local running = false
+local cloningActive = false  -- Variável para controlar a clonagem
 local connections = {}
 
 -- Interface: botão no topo preto
@@ -32,32 +33,53 @@ buttonClonar.Font = Enum.Font.SourceSans
 buttonClonar.TextSize = 16
 buttonClonar.Parent = screenGui
 
--- Clonar barras de ouro infinitamente
+-- Função para clonar a barra de ouro enquanto estiver segurando
 local function clonarBarrasDeOuro()
     local backpack = player.Backpack
     local gold = backpack:FindFirstChild("GoldBar")
     
     if gold then
         spawn(function()
-            while running and gold.Parent do
-                for i = 1, 100 do  -- Ajuste o número de clones conforme necessário
+            while cloningActive and gold.Parent do
+                if backpack:FindFirstChild("GoldBar") then
+                    -- Clonando a barra de ouro enquanto o jogador está segurando
                     local clone = gold:Clone()
                     clone.Parent = backpack
+                    wait(0.1)  -- Atraso para não sobrecarregar o servidor
                 end
-                wait(0.5)  -- Atraso para evitar sobrecarga
             end
         end)
     end
 end
 
--- Função para clonar uma barra de ouro ao clicar no botão "CLONAR"
-local function clonarUmaBarraDeOuro()
-    local backpack = player.Backpack
-    local gold = backpack:FindFirstChild("GoldBar")
-    
-    if gold then
-        local clone = gold:Clone()
-        clone.Parent = backpack
+-- Função para ativar a clonagem
+local function ativarClonagem()
+    cloningActive = true
+    clonarBarrasDeOuro()
+    buttonClonar.Text = "DESCLONAR"
+    buttonClonar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+end
+
+-- Função para desativar a clonagem
+local function desativarClonagem()
+    cloningActive = false
+    buttonClonar.Text = "CLONAR"
+    buttonClonar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+end
+
+-- Dinheiro infinito
+local function darDinheiroInfinito()
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if leaderstats then
+        local money = leaderstats:FindFirstChild("Money") -- Troque "Money" se o nome for outro, tipo "Bonds"
+        if money then
+            spawn(function()
+                while running and money.Parent do
+                    money.Value = 999999999
+                    wait(0.5)
+                end
+            end)
+        end
     end
 end
 
@@ -110,7 +132,7 @@ local function ativar()
         end
     end
 
-    clonarBarrasDeOuro()  -- Adiciona a clonagem de barras de ouro
+    darDinheiroInfinito()
 end
 
 -- Desativar tudo
@@ -135,9 +157,13 @@ buttonAtivar.MouseButton1Click:Connect(function()
     end
 end)
 
--- Botão "Clonar" para clonar uma barra de ouro ao clicar
+-- Alternância do botão "Clonar"
 buttonClonar.MouseButton1Click:Connect(function()
-    clonarUmaBarraDeOuro()
+    if cloningActive then
+        desativarClonagem()  -- Desativa a clonagem
+    else
+        ativarClonagem()  -- Ativa a clonagem
+    end
 end)
 
 -- Reativa após respawn
