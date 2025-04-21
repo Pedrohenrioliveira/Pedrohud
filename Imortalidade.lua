@@ -1,4 +1,4 @@
--- Script com Imortalidade, Dano Infinito e Botão Liga/Desliga
+-- Script com Imortalidade, Dano Infinito e Botão Preto no Topo
 local player = game:GetService("Players").LocalPlayer
 local coreGui = game:GetService("CoreGui")
 local running = false
@@ -10,20 +10,22 @@ screenGui.Name = "ToggleImortal"
 screenGui.ResetOnSpawn = false
 
 local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 60, 0, 30)
-button.Position = UDim2.new(1, -70, 1, -40) -- canto inferior direito
+button.Size = UDim2.new(0, 60, 0, 25)
+button.Position = UDim2.new(1, -70, 0, 10) -- canto superior direito
 button.Text = "LIGAR"
-button.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+button.BackgroundColor3 = Color3.fromRGB(20, 20, 20) -- fundo preto
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.BorderSizePixel = 0
+button.Font = Enum.Font.SourceSans
+button.TextSize = 16
 button.Parent = screenGui
 
--- Ativa imortalidade
+-- Ativa imortalidade e dano infinito
 local function ativar()
 	running = true
 	local char = player.Character or player.CharacterAdded:Wait()
 	local humanoid = char:WaitForChild("Humanoid")
 
-	-- Imortalidade reforçada
 	table.insert(connections, humanoid:GetPropertyChangedSignal("Health"):Connect(function()
 		if humanoid.Health < humanoid.MaxHealth then
 			humanoid.Health = humanoid.MaxHealth
@@ -46,7 +48,6 @@ local function ativar()
 		end
 	end)
 
-	-- Dano infinito
 	for _, part in pairs(char:GetDescendants()) do
 		if part:IsA("BasePart") then
 			local conn = part.Touched:Connect(function(hit)
@@ -76,15 +77,15 @@ button.MouseButton1Click:Connect(function()
 	if running then
 		desativar()
 		button.Text = "LIGAR"
-		button.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+		button.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	else
 		ativar()
 		button.Text = "DESLIGAR"
-		button.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+		button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	end
 end)
 
--- Recarrega ao morrer
+-- Reativa após morrer
 player.CharacterAdded:Connect(function()
 	if running then
 		wait(0.5)
