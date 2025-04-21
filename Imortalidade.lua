@@ -1,18 +1,18 @@
--- Script com Imortalidade, Dano Infinito (não afeta jogadores) e Botão Preto no Topo
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local coreGui = game:GetService("CoreGui")
 local running = false
 local connections = {}
 
--- Cria a GUI do botão
+-- Interface: botão no topo preto
 local screenGui = Instance.new("ScreenGui", coreGui)
 screenGui.Name = "ToggleImortal"
 screenGui.ResetOnSpawn = false
 
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0, 60, 0, 25)
-button.Position = UDim2.new(1, -70, 0, 10) -- canto superior direito
+button.Position = UDim2.new(1, -70, 0, 10)
 button.Text = "LIGAR"
 button.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -21,13 +21,28 @@ button.Font = Enum.Font.SourceSans
 button.TextSize = 16
 button.Parent = screenGui
 
--- Ativa imortalidade + dano infinito
+-- Dinheiro infinito
+local function darDinheiroInfinito()
+	local leaderstats = player:FindFirstChild("leaderstats")
+	if leaderstats then
+		local money = leaderstats:FindFirstChild("Money") -- Troque "Money" se o nome for outro, tipo "Bonds"
+		if money then
+			spawn(function()
+				while running and money.Parent do
+					money.Value = 999999999
+					wait(0.5)
+				end
+			end)
+		end
+	end
+end
+
+-- Imortalidade e dano infinito (NPCs apenas)
 local function ativar()
 	running = true
 	local char = player.Character or player.CharacterAdded:Wait()
 	local humanoid = char:WaitForChild("Humanoid")
 
-	-- Imortalidade
 	table.insert(connections, humanoid:GetPropertyChangedSignal("Health"):Connect(function()
 		if humanoid.Health < humanoid.MaxHealth then
 			humanoid.Health = humanoid.MaxHealth
@@ -50,7 +65,6 @@ local function ativar()
 		end
 	end)
 
-	-- Dano infinito em NPCs (ignora jogadores)
 	for _, part in pairs(char:GetDescendants()) do
 		if part:IsA("BasePart") then
 			local conn = part.Touched:Connect(function(hit)
@@ -60,12 +74,10 @@ local function ativar()
 				local enemyHum = enemyChar:FindFirstChild("Humanoid")
 				if not enemyHum then return end
 
-				-- Verifica se é um jogador; se for, ignora
 				if Players:GetPlayerFromCharacter(enemyChar) then
 					return
 				end
 
-				-- Mata o NPC
 				pcall(function()
 					enemyHum.Health = 0
 				end)
@@ -73,9 +85,11 @@ local function ativar()
 			table.insert(connections, conn)
 		end
 	end
+
+	darDinheiroInfinito()
 end
 
--- Desativa tudo
+-- Desativar tudo
 local function desativar()
 	running = false
 	for _, conn in pairs(connections) do
@@ -84,7 +98,7 @@ local function desativar()
 	connections = {}
 end
 
--- Alterna ao clicar
+-- Alternância do botão
 button.MouseButton1Click:Connect(function()
 	if running then
 		desativar()
@@ -97,10 +111,11 @@ button.MouseButton1Click:Connect(function()
 	end
 end)
 
--- Reativa após respawn, se estiver ligado
+-- Reativa após respawn
 player.CharacterAdded:Connect(function()
 	if running then
 		wait(0.5)
 		ativar()
 	end
 end)
+
