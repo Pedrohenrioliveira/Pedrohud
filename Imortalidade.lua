@@ -38,11 +38,18 @@ buttonClonar.Parent = screenGui
 local function clonarBarraDeOuro()
     local char = player.Character
     if not char then return end
-    local gold = char:FindFirstChild("GoldBar")
-    if gold then
-        local clone = gold:Clone()
-        clone.Parent = player.Backpack
+
+    -- Procura uma Tool com "gold" no nome
+    for _, item in pairs(char:GetChildren()) do
+        if item:IsA("Tool") and item.Name:lower():find("gold") then
+            local clone = item:Clone()
+            clone.Parent = player.Backpack
+            print("Barra clonada!")
+            return
+        end
     end
+
+    warn("Nenhuma barra de ouro encontrada na mão.")
 end
 
 -- Função: ativar imortalidade e dano infinito
@@ -61,18 +68,20 @@ local function ativarImortal()
     -- Recriar Humanoid se for removido
     table.insert(connections, char.ChildRemoved:Connect(function(c)
         if c.Name == "Humanoid" then
-            wait(0.1)
-            local novo = Instance.new("Humanoid")
-            novo.Name = "Humanoid"
-            novo.Parent = char
+            task.wait(0.1)
+            if not char:FindFirstChild("Humanoid") then
+                local novo = Instance.new("Humanoid")
+                novo.Name = "Humanoid"
+                novo.Parent = char
+            end
         end
     end))
 
     -- Loop para garantir saúde máxima
-    spawn(function()
+    task.spawn(function()
         while running and humanoid and humanoid.Parent do
             humanoid.Health = humanoid.MaxHealth
-            wait(0.1)
+            task.wait(0.1)
         end
     end)
 
@@ -123,7 +132,7 @@ end)
 -- Reaplicar imortalidade após respawn
 player.CharacterAdded:Connect(function()
     if running then
-        wait(0.5)
+        task.wait(0.5)
         ativarImortal()
     end
 end)
