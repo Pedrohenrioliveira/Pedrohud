@@ -23,46 +23,25 @@ buttonAtivar.Font = Enum.Font.SourceSans
 buttonAtivar.TextSize = 16
 buttonAtivar.Parent = screenGui
 
--- Botão REVIVER
-local buttonReviver = Instance.new("TextButton")
-buttonReviver.Size = UDim2.new(0, 100, 0, 30)
-buttonReviver.Position = UDim2.new(1, -110, 0, 50)
-buttonReviver.Text = "REVIVER"
-buttonReviver.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
-buttonReviver.TextColor3 = Color3.fromRGB(255, 255, 255)
-buttonReviver.BorderSizePixel = 0
-buttonReviver.Font = Enum.Font.SourceSans
-buttonReviver.TextSize = 16
-buttonReviver.Parent = screenGui
-
 -- Ativar imortalidade e dano infinito
 local function ativarImortal()
     running = true
     local char = player.Character or player.CharacterAdded:Wait()
     local humanoid = char:WaitForChild("Humanoid")
 
-    -- Impedir que o personagem morra
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-    humanoid.Health = math.huge
     humanoid.MaxHealth = math.huge
+    humanoid.Health = math.huge
 
-    -- Monitorar alterações de vida
-    table.insert(connections, humanoid:GetPropertyChangedSignal("Health"):Connect(function()
-        if not running then return end
-        if humanoid.Health < humanoid.MaxHealth then
-            humanoid.Health = math.huge
-        end
-    end))
-
-    -- Forçar vida e impedir quedas
     table.insert(connections, RunService.Heartbeat:Connect(function()
         if not running then return end
+        if humanoid and humanoid.Health < humanoid.MaxHealth then
+            humanoid.Health = math.huge
+        end
         humanoid.PlatformStand = false
         humanoid.Sit = false
-        humanoid.Health = math.huge
     end))
 
-    -- Recriar Humanoid se for removido
     table.insert(connections, char.ChildRemoved:Connect(function(c)
         if c.Name == "Humanoid" then
             task.wait(0.1)
@@ -74,7 +53,6 @@ local function ativarImortal()
         end
     end))
 
-    -- Dano infinito em inimigos
     for _, part in pairs(char:GetDescendants()) do
         if part:IsA("BasePart") then
             local conn = part.Touched:Connect(function(hit)
@@ -92,22 +70,23 @@ local function ativarImortal()
     end
 end
 
+-- Desativar imortalidade (com vida cheia)
 local function desativar()
+    local char = player.Character
+    if char then
+        local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+        if humanoid then
+            humanoid.MaxHealth = 100
+            humanoid.Health = 100
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+        end
+    end
+
     running = false
     for _, conn in pairs(connections) do
         pcall(function() conn:Disconnect() end)
     end
     connections = {}
-
-    local char = player.Character
-    if char then
-        local humanoid = char:FindFirstChildWhichIsA("Humanoid")
-        if humanoid then
-            humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-            humanoid.MaxHealth = 100
-            humanoid.Health = 100
-        end
-    end
 end
 
 -- Botão de ativar/desativar
@@ -120,25 +99,6 @@ buttonAtivar.MouseButton1Click:Connect(function()
         ativarImortal()
         buttonAtivar.Text = "DESLIGAR"
         buttonAtivar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    end
-end)
-
--- Botão de Reviver
-buttonReviver.MouseButton1Click:Connect(function()
-    local char = player.Character
-    if not char then return end
-
-    local humanoid = char:FindFirstChildWhichIsA("Humanoid")
-    if humanoid then
-        humanoid.Health = humanoid.MaxHealth
-        humanoid.PlatformStand = false
-        humanoid.Sit = false
-    end
-
-    for _, obj in pairs(char:GetDescendants()) do
-        if obj:IsA("Script") or obj:IsA("LocalScript") then
-            pcall(function() obj.Disabled = true obj.Disabled = false end)
-        end
     end
 end)
 
