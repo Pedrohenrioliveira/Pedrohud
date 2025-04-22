@@ -1,14 +1,15 @@
-local Players    = game:GetService("Players")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local player     = Players.LocalPlayer
-local coreGui    = game:GetService("CoreGui")
-local running    = false
+local player = Players.LocalPlayer
+local coreGui = game:GetService("CoreGui")
+local running = false
 local connections = {}
 
 -- GUI Setup
-local screenGui = Instance.new("ScreenGui", coreGui)
+local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "ToggleImortal"
 screenGui.ResetOnSpawn = false
+screenGui.Parent = coreGui
 
 -- Botão LIGAR/DESLIGAR Imortalidade & Dano Infinito
 local buttonAtivar = Instance.new("TextButton")
