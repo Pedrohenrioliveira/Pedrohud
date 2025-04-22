@@ -34,22 +34,24 @@ buttonClonar.Font = Enum.Font.SourceSans
 buttonClonar.TextSize = 16
 buttonClonar.Parent = screenGui
 
--- Função: clonar uma barra de ouro se estiver na mão
+-- Função: clonar uma barra de ouro flutuante
 local function clonarBarraDeOuro()
     local char = player.Character
     if not char then return end
 
-    -- Procura uma Tool com "gold" no nome
-    for _, item in pairs(char:GetChildren()) do
-        if item:IsA("Tool") and item.Name:lower():find("gold") then
+    -- Procura qualquer BasePart com "gold" no nome nos descendentes do personagem
+    for _, item in pairs(char:GetDescendants()) do
+        if item:IsA("BasePart") and item.Name:lower():find("gold") then
             local clone = item:Clone()
-            clone.Parent = player.Backpack
+            clone.Anchored = false
+            clone.Parent = workspace
+            clone.CFrame = item.CFrame + Vector3.new(2, 0, 0) -- posiciona ao lado
             print("Barra clonada!")
             return
         end
     end
 
-    warn("Nenhuma barra de ouro encontrada na mão.")
+    warn("Nenhuma barra de ouro encontrada no personagem.")
 end
 
 -- Função: ativar imortalidade e dano infinito
