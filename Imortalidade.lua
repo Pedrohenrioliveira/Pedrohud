@@ -35,24 +35,48 @@ buttonClonar.Font = Enum.Font.SourceSans
 buttonClonar.TextSize = 16
 buttonClonar.Parent = screenGui
 
--- Função: clonar uma barra de ouro flutuante
-local function clonarBarraDeOuro()
-    local char = player.Character
-    if not char then return end
+-- Lista de possíveis nomes
+local nomesPossiveis = {
+    "barra de ouro",
+    "gold bar",
+    "goldbar",
+    "ouro",
+    "gold"
+}
 
-    -- Procura qualquer BasePart com "gold" no nome nos descendentes do personagem
-    for _, item in pairs(char:GetDescendants()) do
-        if item:IsA("BasePart") and item.Name:lower():find("gold") then
-            local clone = item:Clone()
-            clone.Anchored = false
-            clone.Parent = workspace
-            clone.CFrame = item.CFrame + Vector3.new(2, 0, 0) -- posiciona ao lado
-            print("Barra clonada!")
-            return
+-- Verifica se o nome do objeto é compatível
+local function nomeValido(nome)
+    nome = nome:lower()
+    for _, n in pairs(nomesPossiveis) do
+        if nome:find(n) then
+            return true
+        end
+    end
+    return false
+end
+
+-- Função: clonar objeto flutuante
+local function clonarItemFlutuando()
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and not obj:IsDescendantOf(char) then
+            if nomeValido(obj.Name) then
+                local mag = (obj.Position - char.HumanoidRootPart.Position).Magnitude
+                if mag < 10 then -- está perto do jogador
+                    local clone = obj:Clone()
+                    clone.Anchored = false
+                    clone.Parent = workspace
+                    clone.CFrame = obj.CFrame + Vector3.new(2, 0, 0)
+                    print("Item flutuando clonado!")
+                    return
+                end
+            end
         end
     end
 
-    warn("Nenhuma barra de ouro encontrada no personagem.")
+    warn("Nenhum item flutuando encontrado.")
 end
 
 -- Função: ativar imortalidade e dano infinito
@@ -129,7 +153,7 @@ buttonAtivar.MouseButton1Click:Connect(function()
 end)
 
 buttonClonar.MouseButton1Click:Connect(function()
-    clonarBarraDeOuro()
+    clonarItemFlutuando()
 end)
 
 -- Reaplicar imortalidade após respawn
