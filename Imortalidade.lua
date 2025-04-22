@@ -41,20 +41,28 @@ local function ativarImortal()
     local char = player.Character or player.CharacterAdded:Wait()
     local humanoid = char:WaitForChild("Humanoid")
 
+    -- Impedir que o personagem morra
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+    humanoid.Health = math.huge
+    humanoid.MaxHealth = math.huge
+
+    -- Monitorar alterações de vida
     table.insert(connections, humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+        if not running then return end
         if humanoid.Health < humanoid.MaxHealth then
-            humanoid.Health = humanoid.MaxHealth
+            humanoid.Health = math.huge
         end
     end))
 
+    -- Forçar vida e impedir quedas
     table.insert(connections, RunService.Heartbeat:Connect(function()
+        if not running then return end
         humanoid.PlatformStand = false
         humanoid.Sit = false
-        if humanoid.Health < humanoid.MaxHealth then
-            humanoid.Health = humanoid.MaxHealth
-        end
+        humanoid.Health = math.huge
     end))
 
+    -- Recriar Humanoid se for removido
     table.insert(connections, char.ChildRemoved:Connect(function(c)
         if c.Name == "Humanoid" then
             task.wait(0.1)
@@ -66,6 +74,7 @@ local function ativarImortal()
         end
     end))
 
+    -- Dano infinito em inimigos
     for _, part in pairs(char:GetDescendants()) do
         if part:IsA("BasePart") then
             local conn = part.Touched:Connect(function(hit)
@@ -89,6 +98,16 @@ local function desativar()
         pcall(function() conn:Disconnect() end)
     end
     connections = {}
+
+    local char = player.Character
+    if char then
+        local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+        if humanoid then
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            humanoid.MaxHealth = 100
+            humanoid.Health = 100
+        end
+    end
 end
 
 -- Botão de ativar/desativar
@@ -126,6 +145,8 @@ end)
 -- Reaplicar após respawn
 player.CharacterAdded:Connect(function()
     if running then
+        local char = player.Character or player.CharacterAdded:Wait()
+        char:WaitForChild("Humanoid")
         task.wait(0.5)
         ativarImortal()
     end
