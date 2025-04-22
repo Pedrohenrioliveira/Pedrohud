@@ -7,11 +7,11 @@ local connections = {}
 
 -- GUI Setup
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "ToggleImortal"
+screenGui.Name = "ImortalUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = coreGui
 
--- Botão LIGAR/DESLIGAR Imortalidade & Dano Infinito
+-- Botão Imortalidade / Dano
 local buttonAtivar = Instance.new("TextButton")
 buttonAtivar.Size = UDim2.new(0, 100, 0, 30)
 buttonAtivar.Position = UDim2.new(1, -110, 0, 10)
@@ -23,29 +23,38 @@ buttonAtivar.Font = Enum.Font.SourceSans
 buttonAtivar.TextSize = 16
 buttonAtivar.Parent = screenGui
 
+-- Botão REVIVER
+local buttonReviver = Instance.new("TextButton")
+buttonReviver.Size = UDim2.new(0, 100, 0, 30)
+buttonReviver.Position = UDim2.new(1, -110, 0, 50)
+buttonReviver.Text = "REVIVER"
+buttonReviver.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
+buttonReviver.TextColor3 = Color3.fromRGB(255, 255, 255)
+buttonReviver.BorderSizePixel = 0
+buttonReviver.Font = Enum.Font.SourceSans
+buttonReviver.TextSize = 16
+buttonReviver.Parent = screenGui
+
 -- Ativar imortalidade e dano infinito
 local function ativarImortal()
     running = true
     local char = player.Character or player.CharacterAdded:Wait()
     local humanoid = char:WaitForChild("Humanoid")
 
-    -- Saúde no máximo sempre
     table.insert(connections, humanoid:GetPropertyChangedSignal("Health"):Connect(function()
         if humanoid.Health < humanoid.MaxHealth then
             humanoid.Health = humanoid.MaxHealth
         end
     end))
 
-    -- Bloqueia dano (também de projéteis e múltiplos mobs)
     table.insert(connections, RunService.Heartbeat:Connect(function()
-        if humanoid and humanoid.Health < humanoid.MaxHealth then
-            humanoid.Health = humanoid.MaxHealth
-        end
         humanoid.PlatformStand = false
         humanoid.Sit = false
+        if humanoid.Health < humanoid.MaxHealth then
+            humanoid.Health = humanoid.MaxHealth
+        end
     end))
 
-    -- Recriar humanoid caso seja removido
     table.insert(connections, char.ChildRemoved:Connect(function(c)
         if c.Name == "Humanoid" then
             task.wait(0.1)
@@ -57,7 +66,6 @@ local function ativarImortal()
         end
     end))
 
-    -- Dano infinito a NPCs (ao tocar)
     for _, part in pairs(char:GetDescendants()) do
         if part:IsA("BasePart") then
             local conn = part.Touched:Connect(function(hit)
@@ -75,7 +83,6 @@ local function ativarImortal()
     end
 end
 
--- Desativar tudo
 local function desativar()
     running = false
     for _, conn in pairs(connections) do
@@ -84,7 +91,7 @@ local function desativar()
     connections = {}
 end
 
--- Clique do botão
+-- Botão de ativar/desativar
 buttonAtivar.MouseButton1Click:Connect(function()
     if running then
         desativar()
@@ -94,6 +101,25 @@ buttonAtivar.MouseButton1Click:Connect(function()
         ativarImortal()
         buttonAtivar.Text = "DESLIGAR"
         buttonAtivar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    end
+end)
+
+-- Botão de Reviver
+buttonReviver.MouseButton1Click:Connect(function()
+    local char = player.Character
+    if not char then return end
+
+    local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+    if humanoid then
+        humanoid.Health = humanoid.MaxHealth
+        humanoid.PlatformStand = false
+        humanoid.Sit = false
+    end
+
+    for _, obj in pairs(char:GetDescendants()) do
+        if obj:IsA("Script") or obj:IsA("LocalScript") then
+            pcall(function() obj.Disabled = true obj.Disabled = false end)
+        end
     end
 end)
 
